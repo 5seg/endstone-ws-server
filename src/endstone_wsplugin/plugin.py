@@ -6,7 +6,7 @@ import websockets
 
 class WSPlugin(Plugin):
     prefix = "WSServerPlugin"
-    api_version = "0.4.0"
+    api_version = "0.11"
     websocket = None  # WebSocketの接続を保持するための変数
 
     def on_load(self) -> None:
