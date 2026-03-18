@@ -1,7 +1,6 @@
-from endstone import ColorFormat
+from endstone import ColorFormat, Server
 from endstone.event import event_handler, PlayerJoinEvent, PlayerQuitEvent
 from endstone.plugin import Plugin
-
 
 class BasicListener:
     def __init__(self, plugin: Plugin):
