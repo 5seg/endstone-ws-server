@@ -36,7 +36,7 @@ class WSPlugin(Plugin):
             print("クライアントとの接続が閉じられました")
 
     async def start_websocket_server(self):
-        async with websockets.serve(self.echo, "100.71.252.32", 8765):
+        async with websockets.serve(self.echo, "0.0.0.0", 8765):
             print("WebSocketサーバーが起動しました")
             await asyncio.Future()  # 永久に待機
 
