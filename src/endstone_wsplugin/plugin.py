@@ -1,28 +1,15 @@
 from endstone.event import ServerLoadEvent, PlayerChatEvent, event_handler
 from endstone.plugin import Plugin
 from endstone_wsplugin.listener import BasicListener
+import threading
 import asyncio
 import websockets
+import json
 
 class WSPlugin(Plugin):
     prefix = "WSServerPlugin"
     api_version = "0.11"
     websocket = None  # WebSocketの接続を保持するための変数
-
-    def on_load(self) -> None:
-        self.logger.info("on_load is called!")
-
-    def on_enable(self) -> None:
-        self.logger.info("on_enable is called!")
-        self.register_events(self)
-        self.register_events(BasicListener(self))
-        #self.server.scheduler.run_task(self, self.log_time, delay=0, period=20 * 1) #type:ignore
-
-        # WebSocketサーバーを起動
-        asyncio.run(self.start_websocket_server())
-
-    def on_disable(self) -> None:
-        self.logger.info("on_disable is called!")
 
     async def echo(self, websocket):
         self.websocket = websocket  # 接続を保持
@@ -31,19 +18,37 @@ class WSPlugin(Plugin):
             async for message in websocket:
                 print(f"[WS] Recv: {message}")
                 # メッセージをサーバーのチャットに送信
-                self.server.broadcast_message(f"[WS] {message}")
+                self.server.broadcast_message(f"[Discord] {message}")
         except websockets.exceptions.ConnectionClosed:
             print("クライアントとの接続が閉じられました")
 
+    def on_enable(self) -> None:
+        self.logger.info("on_enable is called!")
+        self.register_events(self)
+        self.register_events(BasicListener(self))
+
+        # 別スレッドで asyncio イベントループを回して WebSocket サーバーを起動
+        t = threading.Thread(target=self._start_ws_loop_thread, daemon=True)
+        t.start()
+
+    def _start_ws_loop_thread(self):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        # start_websocket_server は async 関数なのでタスクとして起動
+        loop.create_task(self.start_websocket_server())
+        try:
+            loop.run_forever()
+        finally:
+            loop.run_until_complete(loop.shutdown_asyncgens())
+            loop.close()
+
     async def start_websocket_server(self):
-        async with websockets.serve(self.echo, "0.0.0.0", 8765):
-            print("WebSocketサーバーが起動しました")
-            await asyncio.Future()  # 永久に待機
-
-    @event_handler
-    def on_server_load(self, event: ServerLoadEvent):
-        self.logger.info(f"{event.event_name} is passed to on_server_load")
-
+        async def handler(websocket, path):
+            await self.echo(websocket)
+        # 0.0.0.0:8765 で待ち受け（パス引数は websockets v11 以降で異なるので環境に合わせて修正）
+        server = await websockets.serve(self.echo, "0.0.0.0", 8765)
+        self.logger.info("WebSocketサーバーが起動しました")
+        await server.wait_closed()
     @event_handler
     def on_player_chat(self, event: PlayerChatEvent):
         player = event.player
@@ -53,7 +58,8 @@ class WSPlugin(Plugin):
         self.logger.info(f"{player.name}: {message}")
 
         # メッセージをWebSocketに送信
-        asyncio.run(self.send_message_to_websocket(f"{player.name}: {message}"))
+        data = {"event":"chat","player":{"name":player.name},"message":message}
+        asyncio.run(self.send_message_to_websocket(json.dumps(data)))
 
     async def send_message_to_websocket(self, message: str):
         if self.websocket is not None:
