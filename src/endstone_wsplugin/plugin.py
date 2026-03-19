@@ -23,9 +23,12 @@ class WSPlugin(Plugin):
         print("クライアントが接続しました")
         try:
             async for message in websocket:
-                print(f"[WS] Recv: {message}")
-                # メッセージをサーバーのチャットに送信
-                self.server.broadcast_message(f"[Discord] {message}")
+                if message == "0":
+                    websocket.send("1")
+                else:
+                    print(f"[WS] Recv: {message}")
+                    # メッセージをサーバーのチャットに送信
+                    self.server.broadcast_message(f"[Discord] {message}")
         except websockets.exceptions.ConnectionClosed:
             print("クライアントとの接続が閉じられました")
 
