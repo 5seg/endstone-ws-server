@@ -16,7 +16,7 @@ class WSPlugin(Plugin):
         self.logger.info("on_enable is called!")
         self.register_events(self)
         self.register_events(BasicListener(self))
-        self.server.scheduler.run_task(self, self.log_time, delay=0, period=20 * 1) #type:ignore
+        #self.server.scheduler.run_task(self, self.log_time, delay=0, period=20 * 1) #type:ignore
 
         # WebSocketサーバーを起動
         asyncio.run(self.start_websocket_server())
@@ -36,7 +36,7 @@ class WSPlugin(Plugin):
             print("クライアントとの接続が閉じられました")
 
     async def start_websocket_server(self):
-        async with websockets.serve(self.echo, "localhost", 8765):
+        async with websockets.serve(self.echo, "100.71.252.32", 8765):
             print("WebSocketサーバーが起動しました")
             await asyncio.Future()  # 永久に待機
 
