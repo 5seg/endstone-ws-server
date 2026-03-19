@@ -43,8 +43,6 @@ class WSPlugin(Plugin):
             loop.close()
 
     async def start_websocket_server(self):
-        async def handler(websocket, path):
-            await self.echo(websocket)
         # 0.0.0.0:8765 で待ち受け（パス引数は websockets v11 以降で異なるので環境に合わせて修正）
         server = await websockets.serve(self.echo, "0.0.0.0", 8765)
         self.logger.info("WebSocketサーバーが起動しました")
