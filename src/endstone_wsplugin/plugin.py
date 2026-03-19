@@ -1,10 +1,17 @@
-from endstone.event import ServerLoadEvent, PlayerChatEvent, event_handler
+from endstone.event import (
+    PlayerChatEvent,
+    PlayerJoinEvent,
+    PlayerQuitEvent,
+    event_handler,
+)
 from endstone.plugin import Plugin
 from endstone_wsplugin.listener import BasicListener
 import threading
 import asyncio
 import websockets
 import json
+import base64
+
 
 class WSPlugin(Plugin):
     prefix = "WSServerPlugin"
@@ -47,6 +54,7 @@ class WSPlugin(Plugin):
         server = await websockets.serve(self.echo, "0.0.0.0", 8765)
         self.logger.info("WebSocketサーバーが起動しました")
         await server.wait_closed()
+
     @event_handler
     def on_player_chat(self, event: PlayerChatEvent):
         player = event.player
@@ -56,7 +64,21 @@ class WSPlugin(Plugin):
         self.logger.info(f"{player.name}: {message}")
 
         # メッセージをWebSocketに送信
-        data = {"event":"chat","player":{"name":player.name},"message":message}
+        data = {"event": "chat", "player": {"name": player.name}, "message": message}
+        asyncio.run(self.send_message_to_websocket(json.dumps(data)))
+
+    @event_handler
+    def on_player_join(self, event: PlayerJoinEvent):
+        player = event.player
+        playerSkin = base64.b64encode(player.skin.image)
+        data = {"event": "join", "player": {"name": player.name, "skin": playerSkin}}
+        asyncio.run(self.send_message_to_websocket(json.dumps(data)))
+
+    @event_handler
+    def on_player_quit(self, event: PlayerQuitEvent):
+        player = event.player
+        playerSkin = base64.b64encode(player.skin.image)
+        data = {"event": "quit", "player": {"name": player.name, "skin": playerSkin}}
         asyncio.run(self.send_message_to_websocket(json.dumps(data)))
 
     async def send_message_to_websocket(self, message: str):
