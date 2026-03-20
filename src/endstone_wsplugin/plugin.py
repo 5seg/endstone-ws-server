@@ -28,7 +28,7 @@ class WSPlugin(Plugin):
                 else:
                     print(f"[WS] Recv: {message}")
                     # メッセージをサーバーのチャットに送信
-                    self.server.broadcast_message(f"[Discord] {message}")
+                    self.server.broadcast_message(f"[§bDiscord§r] {message}")
         except websockets.exceptions.ConnectionClosed:
             print("クライアントとの接続が閉じられました")
 

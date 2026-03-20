@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "endstone-wsplugin"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
     "asyncio==4.0.0",
     "websockets==16.0"
