@@ -72,17 +72,19 @@ class WSPlugin(Plugin):
     @event_handler
     def on_player_join(self, event: PlayerJoinEvent):
         player = event.player
-        playerSkin = player.skin.image.tobytes()
-        print(playerSkin)
-        data = {"event": "join", "player": {"name": player.name, "skin": playerSkin}}
+        skin = player.skin.image
+        skinHex = skin.tobytes().hex()
+        skinShape = list(skin.shape)
+        data = {"event": "join", "player": {"name": player.name, "skin": {"hex":skinHex,"shape":skinShape}}}
         asyncio.run(self.send_message_to_websocket(json.dumps(data)))
 
     @event_handler
     def on_player_quit(self, event: PlayerQuitEvent):
         player = event.player
-        playerSkin = player.skin.image.tobytes()
-        print(playerSkin)
-        data = {"event": "quit", "player": {"name": player.name, "skin": playerSkin}}
+        skin = player.skin.image
+        skinHex = skin.tobytes().hex()
+        skinShape = list(skin.shape)
+        data = {"event": "join", "player": {"name": player.name, "skin": {"hex":skinHex,"shape":skinShape}}}
         asyncio.run(self.send_message_to_websocket(json.dumps(data)))
 
     async def send_message_to_websocket(self, message: str):
