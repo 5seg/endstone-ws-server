@@ -10,7 +10,6 @@ import threading
 import asyncio
 import websockets
 import json
-import base64
 
 
 class WSPlugin(Plugin):
@@ -73,14 +72,16 @@ class WSPlugin(Plugin):
     @event_handler
     def on_player_join(self, event: PlayerJoinEvent):
         player = event.player
-        playerSkin = base64.b64encode(player.skin.image)
+        playerSkin = player.skin.image.tobytes()
+        print(playerSkin)
         data = {"event": "join", "player": {"name": player.name, "skin": playerSkin}}
         asyncio.run(self.send_message_to_websocket(json.dumps(data)))
 
     @event_handler
     def on_player_quit(self, event: PlayerQuitEvent):
         player = event.player
-        playerSkin = base64.b64encode(player.skin.image)
+        playerSkin = player.skin.image.tobytes()
+        print(playerSkin)
         data = {"event": "quit", "player": {"name": player.name, "skin": playerSkin}}
         asyncio.run(self.send_message_to_websocket(json.dumps(data)))
 
